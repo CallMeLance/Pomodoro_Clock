@@ -36,7 +36,9 @@ function Clock() {
         mode = "Session", // Keeps track of what mode we're in - session or break
         active = false, // Keeps track of whether the clock is running or not
         _this = this, // Reference to the Clock itself
-        timer; // Reference to the interval that we set up to make the timer run
+        timer, // Reference to the interval that we set up to make the timer run
+        startAudio = new Audio("assets/start.mp3"),
+        endAudio = new Audio("assets/end.mp3");
 
 function formatTime(secs) {
     var result = "";
@@ -69,16 +71,29 @@ function formatTime(secs) {
 this.displayCurrentTime = function() {
         $('.main-display').text(formatTime(currentTime));
 
+        // Update the class for the progress radial to be either break or session depending on what mode we're in.
+        if (mode === "Session" && $('.progress-radial').hasClass('break')) {
+            $('.progress-radial').removeClass('break').addClass('session');
+        } else if (mode === "Break" && $('.progress-radial').hasClass('session')) {
+            $('.progress-radial').removeClass('session').addClass('break');
+        }
+
+        // Set up the step class for the radial
+        $('.progress-radial').attr('class', function(index, currentValue) {
+            return currentValue.replace(/(^|\s)step-\S+/g, " step-" + (100 - parseInt((currentTime / startTime) * 100)));
+        })
+
+
     }
     
     // Function to display the session time
     this.displaySessionTime = function() {
-        $('.time-session-display').text(parseInt(sessionTime / 60) + "min");
+        $('.time-session-display').text(parseInt(sessionTime / 60) + " min");
     }
 
     // Function to display the break time
     this.displayBreakTime = function() {
-        $('.time-break-display').text(parseInt(breakTime / 60) + "min");
+        $('.time-break-display').text(parseInt(breakTime / 60) + " min");
     }
 
     // Function to display the session count
@@ -138,6 +153,7 @@ this.displayCurrentTime = function() {
             if (sessionCount === 0) {
                 sessionCount = 1;
                 this.displaySessionCount();
+                startAudio.play();
             }
             $(".time-start").text("Pause");
             timer = setInterval(function() {
@@ -167,7 +183,7 @@ this.displayCurrentTime = function() {
                     startTime = sessionTime;
                     sessionCount++;
                     throws.displaySessionCount();
-
+                    startAudio.play();
                 }
             }
         }
